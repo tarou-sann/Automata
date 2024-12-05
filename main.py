@@ -7,6 +7,7 @@ import threading
 import time
 
 class DFA_GUI:
+    #initializes the tkinter interface
     def __init__(self, root):
         self.root = root
         self.root.title("DFA Creator")
@@ -19,6 +20,7 @@ class DFA_GUI:
 
         self.create_widgets()
 
+    # Creates tkinter widgets
     def create_widgets(self):
         tk.Label(self.root, text="Alphabet (comma-separated):").grid(row=0, column=0, sticky="w")
         self.alphabet_entry = tk.Entry(self.root, width=30)
@@ -45,6 +47,7 @@ class DFA_GUI:
 
         tk.Button(self.root, text="Simulate String", command=self.simulate_string).grid(row=6, column=0, columnspan=2, pady=10)
 
+    # creates the transition table
     def define_transitions(self):
         try:
             self.alphabet = [x.strip() for x in self.alphabet_entry.get().split(",")]
@@ -83,6 +86,7 @@ class DFA_GUI:
         except ValueError as e:
             messagebox.showerror("Input Error", str(e))
 
+    # Saves the transitions defined in the transition table
     def save_transitions(self):
         try:
             self.transitions = {state: {} for state in self.states}
@@ -97,6 +101,7 @@ class DFA_GUI:
         except ValueError as e:
             messagebox.showerror("Transition Error", str(e))
 
+    # Validates if the DFA is valid or not
     def validate_dfa(self):
         try:
             for state in self.states:
@@ -107,6 +112,8 @@ class DFA_GUI:
         except ValueError as e:
             messagebox.showerror("Validation Error", str(e))
 
+    # Checks if the transitions are defined and correct, 
+    # and initializes the simulation of the string once everything is correct.
     def simulate_string(self):
         try:
             input_string = self.simulation_entry.get().strip()
@@ -127,6 +134,7 @@ class DFA_GUI:
         except ValueError as e:
             messagebox.showerror("Simulation Error", str(e))
 
+    # Outputs whether or not the string is accepted or rejected after the simulation.
     def check_acceptance(self, path):
         final_state = path[-1]
         if final_state in self.accept_states:
@@ -134,7 +142,7 @@ class DFA_GUI:
         else:
             messagebox.showinfo("Result", f"The string is rejected. Final state: {final_state}")
 
-
+    # Simulation of the String
     def visualize_simulation(self, path, input_string):
         G = nx.DiGraph()
         for state in self.states:
@@ -154,8 +162,18 @@ class DFA_GUI:
             edge_labels = nx.get_edge_attributes(G, 'label')
             nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, ax=ax)
 
+            # Draw the current node in red
             current_node = path[frame]
             nx.draw_networkx_nodes(G, pos, nodelist=[current_node], node_color="red", ax=ax, node_size=1500)
+
+            # Add a legend
+            from matplotlib.patches import Patch
+            legend_elements = [
+                Patch(facecolor="green", edgecolor="black", label="Accept State"),
+                Patch(facecolor="blue", edgecolor="black", label="State"),
+                Patch(facecolor="red", edgecolor="black", label="Current State"),
+            ]
+            ax.legend(handles=legend_elements, loc="upper right")
 
             # If this is the last frame, add a delay before showing the result
             if frame == len(path) - 1:
@@ -164,7 +182,7 @@ class DFA_GUI:
         def on_close(event):
             self.animation_interrupted = True  # Mark animation as interrupted
             plt.close(fig)
-        
+
         fig.canvas.mpl_connect("close_event", on_close)
 
         ani = FuncAnimation(fig, update, frames=len(path), interval=1000, repeat=False)
@@ -172,9 +190,6 @@ class DFA_GUI:
         plt.suptitle(f"Simulation of Input String: {input_string}")
         plt.show()
 
-    def delayed_check_acceptance(self, path):
-        time.sleep(1.5)  # Add a 1.5-second delay
-        self.check_acceptance(path)
 
 
 if __name__ == "__main__":
